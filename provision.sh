@@ -30,7 +30,7 @@ fi
 # python -m pip install --upgrade pip
 # 换源完美解决
 # 安装pip所需依赖
-pip install --upgrade setuptools -i https://pypi.tuna.tsinghua.edu.cn/simple
+#pip install --upgrade setuptools -i https://pypi.tuna.tsinghua.edu.cn/simple
 pip install --ignore-installed wrapt -i https://pypi.tuna.tsinghua.edu.cn/simple
 # 安装pip最新版
 pip install -U pip -i https://pypi.tuna.tsinghua.edu.cn/simple

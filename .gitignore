@@ -4,6 +4,7 @@ __pycache__/
 *$py.class
 Vagrantfile
 .vagrant
+
 # C extensions
 *.so
 
