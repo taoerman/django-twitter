@@ -43,6 +43,7 @@ INSTALLED_APPS = [
 
     # project apps
     'accounts',
+    'tweets',
     # debug tool
     'debug_toolbar',
 ]
