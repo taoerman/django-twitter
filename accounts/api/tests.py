@@ -115,7 +115,7 @@
 #
 #         #success
 #         response = self.client.post(SIGNUP_URL, data)
-#         self.assertEqual(response.status_code, 200)
+#         self.assertEqual(response.status_code, 201)
 #         self.assertEqual(response.data['user']['username'], 'someone')
 #         response = self.client.get(LOGIN_STATUS_URL)
 #         self.assertEqual(response.data['has_logged_in'], True)
