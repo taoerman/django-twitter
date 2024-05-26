@@ -13,6 +13,11 @@ class UserSerializerForTweet(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ['id', 'username']
+
+class UserSerializerForFriendship(UserSerializerForTweet):
+    pass
+
+
 # this serializer is to validate if the request contains username and password
 class LoginSerializer(serializers.Serializer):
     username = serializers.CharField()
