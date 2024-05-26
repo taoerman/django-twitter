@@ -95,5 +95,3 @@ class AccountViewSet(viewsets.ViewSet):
         }, status=201)
 
 
-
-
