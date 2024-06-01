@@ -13,9 +13,10 @@ from comments.api.permissions import IsObjectOwner
 class CommentViewSet(viewsets.GenericViewSet):
     serializer_class = CommentSerializerForCreate
     queryset = Comment.objects.all()
+    filterset_fields = ('tweet_id',  )
 
     # POST /api/comments/ -> create
-    # GET /api/comments/ -> list
+    # GET /api/comments/?tweet_id= -> list
     # Get /api/comments/1/ -> retrieve
     # DELETE /api/comments/1/ -> destroy
     # PATCH /api/comments/1/ -> partial_update
@@ -27,6 +28,25 @@ class CommentViewSet(viewsets.GenericViewSet):
         if self.action in ['update', 'destroy']:
             return [IsAuthenticated(), IsObjectOwner()]
         return [AllowAny()]
+
+    def list(self, request, *args, **kwargs):
+        if 'tweet_id' not in request.query_params:
+            return Response({
+                'message' : 'missing tweet_id in request',
+                'success' : False,
+            }, status=status.HTTP_400_BAD_REQUEST)
+        # 这种写法在后期需要添加其他属性进行筛选就很方便
+        queryset = self.get_queryset()
+        comments = self.filter_queryset(queryset)\
+            .prefetch_related('user')\
+            .order_by('created_at')
+        # tweet_id = request.query_params['tweet_id']
+        # comments = Comment.objects.filter(tweet_id=tweet_id)
+        serializer = CommentSerializer(comments, many=True)
+        return Response({
+            'comments' : serializer.data,
+        }, status=status.HTTP_200_OK)
+
 
 
     def create(self, request, *args, **kwargs):
