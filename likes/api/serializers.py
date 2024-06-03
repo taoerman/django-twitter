@@ -13,7 +13,7 @@ class LikeSerializer(serializers.ModelSerializer):
         model = Like
         fields = ('user', 'created_at')
 
-class LikeSerializerForCreate(serializers.ModelSerializer):
+class BaseLikeSerializerForCreateAndCancel(serializers.ModelSerializer):
     content_type = serializers.ChoiceField(choices=['comment', 'tweet'])
     object_id = serializers.IntegerField()
 
@@ -36,6 +36,9 @@ class LikeSerializerForCreate(serializers.ModelSerializer):
         if liked_object is None:
             raise ValidationError({'object_id' : 'Object does not exist'})
         return data
+
+
+class LikeSerializerForCreate(BaseLikeSerializerForCreateAndCancel):
     def create(self, validated_data):
         model_class = self._get_model_class(validated_data)
         instance, _ = Like.objects.get_or_create(
@@ -44,3 +47,22 @@ class LikeSerializerForCreate(serializers.ModelSerializer):
             user=self.context['request'].user,
         )
         return instance
+
+class LikeSerializerForCancel(BaseLikeSerializerForCreateAndCancel):
+
+    def cancel(self):
+        """
+        我们不太需要检测是否点过赞
+        cancel是一个自定义的方法，cancel 不会被 serializer.save()调用
+        所以需要直接调用serializer.cancel()
+
+        delete方法可以删除多项，也可以删除一项，甚至零项，都是没有问题的
+        deleted, rows_count
+        """
+        model_class = self._get_model_class(self.validated_data)
+        deleted, _ = Like.objects.filter(
+            content_type=ContentType.objects.get_for_model(model_class),
+            object_id=self.validated_data['object_id'],
+            user=self.context['request'].user,
+        ).delete()
+        return deleted
