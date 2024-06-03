@@ -9,6 +9,7 @@ from comments.api.serializers import (
 )
 from rest_framework.response import Response
 from comments.api.permissions import IsObjectOwner
+from utils.decorators import required_params
 
 class CommentViewSet(viewsets.GenericViewSet):
     serializer_class = CommentSerializerForCreate
@@ -29,12 +30,8 @@ class CommentViewSet(viewsets.GenericViewSet):
             return [IsAuthenticated(), IsObjectOwner()]
         return [AllowAny()]
 
+    @required_params(params=['tweet_id'])
     def list(self, request, *args, **kwargs):
-        if 'tweet_id' not in request.query_params:
-            return Response({
-                'message' : 'missing tweet_id in request',
-                'success' : False,
-            }, status=status.HTTP_400_BAD_REQUEST)
         # 这种写法在后期需要添加其他属性进行筛选就很方便
         queryset = self.get_queryset()
         comments = self.filter_queryset(queryset)\

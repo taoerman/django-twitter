@@ -21,5 +21,9 @@ class Tweet(models.Model):
         #datetime.now() has no time zone info, need to add utc
         return (utc_now() - self.created_at).seconds // 3600
 
+    # @property
+    # def comments(self):
+    #     return self.comment_set.all()
+    #     # return Comment.objects.filter(tweet=self)
     def __str__(self):
         return f'{self.created_at} {self.user}: {self.content}'
