@@ -1,6 +1,7 @@
 from django.contrib.auth.models import User, Group
 from rest_framework import serializers
 from rest_framework import exceptions
+from accounts.model import UserProfile
 # serializer 可以用来渲染前端
 # 同时也可以用来做 validation，验证一下用户的输入是否是按照要求来的
 
@@ -8,18 +9,33 @@ class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ['id', 'username', 'email']
+class UserSerializerWithProfile(UserSerializer):
+    nickname = serializers.CharField(source='profile.nickname')
+    avatar_url = serializers.SerializerMethodField()
 
-class UserSerializerForTweet(serializers.ModelSerializer):
+    def get_avatar_url(self, obj):
+        if obj.profile.avatar:
+            return obj.profile.avatar.url
+        return None
+
     class Meta:
         model = User
-        fields = ['id', 'username']
+        fields = ('id', 'username', 'nickname', 'avatar_url')
 
-class UserSerializerForComment(UserSerializerForTweet):
-    class Meta:
-        model = User
-        fields = ['id', 'username']
 
-class UserSerializerForFriendship(UserSerializerForTweet):
+class UserSerializerForTweet(UserSerializerWithProfile):
+    pass
+
+
+class UserSerializerForComment(UserSerializerWithProfile):
+    pass
+
+
+class UserSerializerForFriendship(UserSerializerWithProfile):
+    pass
+
+
+class UserSerializerForLike(UserSerializerWithProfile):
     pass
 
 
@@ -64,3 +80,8 @@ class SignupSerializer(serializers.ModelSerializer):
         # create userProfile object
         user.profile
         return user
+
+class UserProfileSerializerForUpdate(serializers.ModelSerializer):
+    class Meta:
+        model = UserProfile
+        fields = ('nickname', 'avatar')
