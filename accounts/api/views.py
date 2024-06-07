@@ -25,7 +25,7 @@ class UserViewSet(viewsets.ModelViewSet):
     """
     queryset = User.objects.all().order_by('-date_joined')
     serializer_class = UserSerializerWithProfile
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAdminUser]
 
 
 class AccountViewSet(viewsets.ViewSet):
@@ -104,5 +104,5 @@ class UserProfileViewSet(
     viewsets.mixins.UpdateModelMixin,
 ):
     queryset = UserProfile
-    permission_classes = (IsObjectOwner,)
+    permission_classes = (permissions.IsAuthenticated, IsObjectOwner,)
     serializer_class = UserProfileSerializerForUpdate
