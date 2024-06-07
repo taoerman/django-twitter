@@ -1,137 +1,14 @@
-# from django.test import TestCase
-# from rest_framework.test import APIClient
-# from django.contrib.auth.models import User
-#
-#
-# LOGIN_URL = 'api/accounts/login/'
-# LOGOUT_URL = 'api/accounts/logout/'
-# SIGNUP_URL = 'api/accounts/signup/'
-# LOGIN_STATUS_URL = 'api/accounts/login_status/'
-#
-#
-#
-# # Create your tests here.
-# class AccountApiTests(TestCase):
-#
-#     def setUp(self):
-#         # this function will be called when every test function is being called
-#         self.client = APIClient()
-#         self.user = self.createUser(
-#             username = 'admin',
-#             email = 'admin@jiuzhang.com',
-#             password = 'correct password',
-#         )
-#
-#     def createUser(self, username, email, password):
-#         # can not code User.objects.create()
-#         # because password should be encrypted,  username and email should be normalized
-#         return User.objects.create_user(username, email, password)
-#
-#     def test_login(self):
-#         #this test must use POST not GEt
-#         response = self.client.get(LOGIN_URL, {
-#             'username' : self.user.username,
-#             'password' : 'correct password',
-#         })
-#         #login failed, http status code return 405 = METHOD_NOT_ALLOWED
-#         self.assertEqual(response.status_code, 405)
-#
-#         #use POST but wrong password
-#         response = self.client.post(LOGIN_URL, {
-#             'username' : self.user.username,
-#             'password' : 'wrong password',
-#         })
-#         self.assertEqual(response.status_code, 400)
-#
-#         #test have not logged in
-#         response = self.client.get(LOGIN_STATUS_URL)
-#         self.assertEqual(response.data['has_logged_in'], False)
-#
-#         # use right password
-#         response = self.client.post(LOGIN_URL, {
-#             'username' : self.user.username,
-#             'password' : 'correct password',
-#         })
-#         self.assertEqual(response.status_code, 200)
-#         self.assertNotEqual(response.data['user'], None)
-#         self.assertEqual(response.data['user']['email'], 'admin@jiuzhang.com')
-#         # check has login
-#         response = self.client.get(LOGIN_STATUS_URL)
-#         self.assertEqual(response.data['has_logged_in'], True)
-#
-#     def test_logout(self):
-#         self.client.post(LOGIN_URL, {
-#             'username' : self.user.username,
-#             'password' : 'correct password',
-#         })
-#
-#         response = self.client.get(LOGIN_STATUS_URL)
-#         self.assertEqual(response.data['has_logged_in'], True)
-#
-#         # test must use POST
-#         response = self.client.get(LOGOUT_URL)
-#         self.assertEqual(response.status_code, 405)
-#
-#         #change to post, success
-#         response = self.client.post(LOGOUT_URL)
-#         self.assertEqual(response.status_code, 200)
-#
-#         response = self.client.get(LOGIN_STATUS_URL)
-#         self.assertEqual(response.data['has_logged_in'], False)
-#
-#     def test_signup(self):
-#         data = {
-#             'username' : 'someone',
-#             'email' : 'someone@jiuzhang.com',
-#             'password' : 'any password',
-#         }
-#         # use get, fail
-#         response = self.client.get(SIGNUP_URL, data)
-#         self.assertEqual(response.status_code, 405)
-#
-#         # use wrong type email
-#         response = self.client.post(SIGNUP_URL, {
-#             'username' : 'someone',
-#             'email' : 'not a correct email',
-#             'password' : 'any password',
-#         })
-#         self.assertEqual(response.status_code, 400)
-#
-#         #use a too short password
-#         response = self.client.post(SIGNUP_URL, {
-#             'username' : 'someone',
-#             'email' : 'someone@jiuzhang.com',
-#             'password' : '123',
-#         })
-#         self.assertEqual(response.status_code, 400)
-#
-#         # user too long username
-#         response = self.client.post(SIGNUP_URL, {
-#             'username' : 'someone anyone hello mother father brother',
-#             'email' : 'someone@jiuzhang.com',
-#             'password' : 'any password'
-#         })
-#         self.assertEqual(response.status_code, 400)
-#
-#         #success
-#         response = self.client.post(SIGNUP_URL, data)
-#         self.assertEqual(response.status_code, 201)
-#         self.assertEqual(response.data['user']['username'], 'someone')
-#         response = self.client.get(LOGIN_STATUS_URL)
-#         self.assertEqual(response.data['has_logged_in'], True)
-#
-#
-#
-#
-from testing.testcases import TestCase
-from rest_framework.test import APIClient
 from accounts.model import UserProfile
+from django.core.files.uploadedfile import SimpleUploadedFile
+from rest_framework.test import APIClient
+from testing.testcases import TestCase
 
 
 LOGIN_URL = '/api/accounts/login/'
 LOGOUT_URL = '/api/accounts/logout/'
 SIGNUP_URL = '/api/accounts/signup/'
 LOGIN_STATUS_URL = '/api/accounts/login_status/'
+USER_PROFILE_DETAIL_URL = '/api/profiles/{}/'
 
 
 class AccountApiTests(TestCase):
@@ -144,11 +21,6 @@ class AccountApiTests(TestCase):
             email='admin@jiuzhang.com',
             password='correct password',
         )
-
-    # def createUser(self, username, email, password):
-    #     # 不能写成 User.objects.create()
-    #     # 因为 password 需要被加密, username 和 email 需要进行一些 normalize 处理
-    #     return User.objects.create_user(username, email, password)
 
     def test_login(self):
         # 每个测试函数必须以 test_ 开头，才会被自动调用进行测试
@@ -177,7 +49,7 @@ class AccountApiTests(TestCase):
         })
         self.assertEqual(response.status_code, 200)
         self.assertNotEqual(response.data['user'], None)
-        self.assertEqual(response.data['user']['email'], 'admin@jiuzhang.com')
+        self.assertEqual(response.data['user']['id'], self.user.id)
         # 验证已经登录了
         response = self.client.get(LOGIN_STATUS_URL)
         self.assertEqual(response.data['has_logged_in'], True)
@@ -244,10 +116,50 @@ class AccountApiTests(TestCase):
         response = self.client.post(SIGNUP_URL, data)
         self.assertEqual(response.status_code, 201)
         self.assertEqual(response.data['user']['username'], 'someone')
-        # 验证user profile已经被创建
+        # 验证 user profile 已经被创建
         created_user_id = response.data['user']['id']
-        profile = UserProfile.objects.filter(user_id=created_user_id)
+        profile = UserProfile.objects.filter(user_id=created_user_id).first()
         self.assertNotEqual(profile, None)
         # 验证用户已经登入
         response = self.client.get(LOGIN_STATUS_URL)
         self.assertEqual(response.data['has_logged_in'], True)
+
+
+class UserProfileAPITests(TestCase):
+
+    def test_update(self):
+        linghu, linghu_client = self.create_user_and_client('linghu')
+        p = linghu.profile
+        p.nickname = 'old nickname'
+        p.save()
+        url = USER_PROFILE_DETAIL_URL.format(p.id)
+
+        # test can only be updated by user himself.
+        _, dongxie_client = self.create_user_and_client('dongxie')
+        response = dongxie_client.put(url, {
+            'nickname': 'a new nickname',
+        })
+        self.assertEqual(response.status_code, 403)
+        p.refresh_from_db()
+        self.assertEqual(p.nickname, 'old nickname')
+
+        # update nickname
+        response = linghu_client.put(url, {
+            'nickname': 'a new nickname',
+        })
+        self.assertEqual(response.status_code, 200)
+        p.refresh_from_db()
+        self.assertEqual(p.nickname, 'a new nickname')
+
+        # update avatar
+        response = linghu_client.put(url, {
+            'avatar': SimpleUploadedFile(
+                name='my-avatar.jpg',
+                content=str.encode('a fake image'),
+                content_type='image/jpeg',
+            ),
+        })
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual('my-avatar' in response.data['avatar'], True)
+        p.refresh_from_db()
+        self.assertIsNotNone(p.avatar)
