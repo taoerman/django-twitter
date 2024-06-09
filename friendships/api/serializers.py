@@ -2,6 +2,7 @@ from accounts.api.serializers import UserSerializerForFriendship
 from friendships.models import Friendship
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
+from friendships.services import FriendshipService
 
 """
 we can get the xx method of model instance through source=xxx
@@ -15,6 +16,7 @@ class FollowerSerializer(serializers.ModelSerializer):
     so they are all from_user
     """
     user = UserSerializerForFriendship(source='from_user')
+    has_followed = serializers.SerializerMethodField()
 
     class Meta:
         model = Friendship
@@ -22,14 +24,26 @@ class FollowerSerializer(serializers.ModelSerializer):
         # the parameters in fields should match the class attributes first
         # if there is no attribute in this class matches fields parameters
         # then, get into the model to find it.
-        fields = ('user', 'created_at')
+        fields = ('user', 'created_at', 'has_followed',)
+
+    def get_has_followed(self, obj):
+        if self.context['request'].user.is_anonymous:
+            return False
+        return FriendshipService.has_followed(self.context['request'].user, obj.from_user)
 
 class FollowingSerializer(serializers.ModelSerializer):
     user = UserSerializerForFriendship(source='to_user')
+    has_followed = serializers.SerializerMethodField()
+
 
     class Meta:
         model = Friendship
-        fields = ('user', 'created_at')
+        fields = ('user', 'created_at', 'has_followed',)
+
+    def get_has_followed(self, obj):
+        if self.context['request'].user.is_anonymous:
+            return False
+        return FriendshipService.has_followed(self.context['request'].user, obj.to_user)
 
 class FriendshipSerializerForCreate(serializers.ModelSerializer):
     from_user_id = serializers.IntegerField()
