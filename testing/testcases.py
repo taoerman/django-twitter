@@ -6,8 +6,12 @@ from tweets.models import Tweet
 from likes.models import Like
 from django.contrib.contenttypes.models import ContentType
 from newsfeeds.models import NewsFeed
+from django.core.cache import caches
 
 class TestCase(DjangoTestCase):
+
+    def clear_cache(self):
+        caches['testing'].clear()
 
     # this is instance level cache
     @property

@@ -4,11 +4,25 @@ from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 from friendships.services import FriendshipService
 
+class FollowingUserIdMixin:
+
+    @property
+    def following_user_id_set(self: serializers.ModelSerializer):
+        if self.context['request'].user.is_anonymous:
+            return {}
+        if hasattr(self, '_cached_following_user_id_set'):
+            return self._cached_following_user_id_set
+        user_id_set = FriendshipService.get_following_user_id_set(
+            self.context['request'].user.id,
+        )
+        setattr(self, '_cached_following_user_id_set', user_id_set)
+        return user_id_set
+
 """
 we can get the xx method of model instance through source=xxx
 like model_instance.xxx to get data
 """
-class FollowerSerializer(serializers.ModelSerializer):
+class FollowerSerializer(serializers.ModelSerializer, FollowingUserIdMixin):
     """
     serializer = Friendship.objects.filter(to_user_id=pk)
     this serializer will get all followers of pk
@@ -27,11 +41,12 @@ class FollowerSerializer(serializers.ModelSerializer):
         fields = ('user', 'created_at', 'has_followed',)
 
     def get_has_followed(self, obj):
-        if self.context['request'].user.is_anonymous:
-            return False
-        return FriendshipService.has_followed(self.context['request'].user, obj.from_user)
+        # if self.context['request'].user.is_anonymous:
+        #     return False
+        # return FriendshipService.has_followed(self.context['request'].user, obj.from_user)
+        return obj.from_user_id in self.following_user_id_set
 
-class FollowingSerializer(serializers.ModelSerializer):
+class FollowingSerializer(serializers.ModelSerializer, FollowingUserIdMixin):
     user = UserSerializerForFriendship(source='to_user')
     has_followed = serializers.SerializerMethodField()
 
@@ -41,9 +56,10 @@ class FollowingSerializer(serializers.ModelSerializer):
         fields = ('user', 'created_at', 'has_followed',)
 
     def get_has_followed(self, obj):
-        if self.context['request'].user.is_anonymous:
-            return False
-        return FriendshipService.has_followed(self.context['request'].user, obj.to_user)
+        # if self.context['request'].user.is_anonymous:
+        #     return False
+        # return FriendshipService.has_followed(self.context['request'].user, obj.to_user)
+        return obj.to_user_id in self.following_user_id_set
 
 class FriendshipSerializerForCreate(serializers.ModelSerializer):
     from_user_id = serializers.IntegerField()
