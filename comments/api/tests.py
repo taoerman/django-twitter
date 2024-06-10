@@ -78,7 +78,6 @@ class CommentApiTests(TestCase):
         url = '{}{}/'.format(COMMENT_URL, comment.id)
 
         response = self.anonymous_client.put(url, {'content' : 'new'})
-        print(response.status_code)
         self.assertEqual(response.status_code, 403)
 
         response = self.dongxie_client.put(url, {'content' : 'new'})
@@ -140,7 +139,6 @@ class CommentApiTests(TestCase):
         tweet = self.create_tweet(self.linghu)
         url = TWEET_DETAIL_API.format(tweet.id)
         response = self.dongxie_client.get(url)
-        # print(response.data)
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.data['comments_count'], 0)
 
@@ -148,7 +146,7 @@ class CommentApiTests(TestCase):
         self.create_comment(self.linghu, tweet)
         response = self.dongxie_client.get(TWEET_LIST_API, {'user_id' : self.linghu.id})
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.data['tweets'][0]['comments_count'], 1)
+        self.assertEqual(response.data['results'][0]['comments_count'], 1)
 
         # test newsfeed api
         self.create_comment(self.dongxie, tweet)
