@@ -29,7 +29,7 @@ class FollowerSerializer(serializers.ModelSerializer, FollowingUserIdMixin):
     for these followers, they all have followed user_id=pk,
     so they are all from_user
     """
-    user = UserSerializerForFriendship(source='from_user')
+    user = UserSerializerForFriendship(source='cached_from_user')
     has_followed = serializers.SerializerMethodField()
 
     class Meta:
@@ -47,7 +47,7 @@ class FollowerSerializer(serializers.ModelSerializer, FollowingUserIdMixin):
         return obj.from_user_id in self.following_user_id_set
 
 class FollowingSerializer(serializers.ModelSerializer, FollowingUserIdMixin):
-    user = UserSerializerForFriendship(source='to_user')
+    user = UserSerializerForFriendship(source='cached_to_user')
     has_followed = serializers.SerializerMethodField()
 
 
