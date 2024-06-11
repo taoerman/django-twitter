@@ -1,5 +1,8 @@
 from django.db import models
 from django.contrib.auth.models import User
+from django.db.models.signals import post_save, pre_delete
+from accounts.listeners import user_changed, profile_changed
+
 
 class UserProfile(models.Model):
     # One2One filed would create a unique index
@@ -28,9 +31,12 @@ class UserProfile(models.Model):
 instance level cache
 """
 def get_profile(user):
+    from accounts.services import UserService
+
     if hasattr(user, '_cached_user_profile'):
         return getattr(user, '_cached_user_profile')
-    profile, _ = UserProfile.objects.get_or_create(user=user)
+    # profile, _ = UserProfile.objects.get_or_create(user=user)
+    profile = UserService.get_profile_through_cache(user_id=user.id)
     # 使用user对象的属性进行缓存cache。避免多次重复调用同一个user的profile
     # 对数据库进行重复查询
     setattr(user, '_cached_user_profile', profile)
@@ -38,4 +44,10 @@ def get_profile(user):
 
 
 User.profile = property(get_profile)
+
+pre_delete.connect(user_changed, sender=User)
+post_save.connect(user_changed, sender=User)
+
+pre_delete.connect(profile_changed, sender=UserProfile)
+post_save.connect(profile_changed, sender=UserProfile)
 
