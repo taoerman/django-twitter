@@ -203,3 +203,5 @@ class TweetApiTests(TestCase):
         self.assertEqual(response.data['has_next_page'], False)
         self.assertEqual(len(response.data['results']), 1)
         self.assertEqual(response.data['results'][0]['id'], new_tweet.id)
+
+

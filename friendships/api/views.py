@@ -33,6 +33,7 @@ class FriendshipViewSet(viewsets.GenericViewSet):
         # GET /api/friendships/1/followers/
         # AllowAny means everyone could get the followers of user_id = pk
         friendships = Friendship.objects.filter(to_user_id=pk).order_by('-created_at')
+        # page is  queryset as well
         page = self.paginate_queryset(friendships)
         serializer = FollowerSerializer(page, many=True, context={'request':request})
         return self.get_paginated_response(serializer.data)
