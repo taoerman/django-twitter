@@ -10,6 +10,7 @@ from tweets.api.serializers import (
 from newsfeeds.services import NewsFeedService
 from utils.decorators import required_params
 from utils.paginations import EndlessPagination
+from tweets.services import TweetService
 
 class TweetViewSet(viewsets.GenericViewSet):
     serializer_class = TweetSerializerForCreate
@@ -28,9 +29,10 @@ class TweetViewSet(viewsets.GenericViewSet):
         # do not list all tweets, must give user_id
         #select * from twitter_tweets
         #where user_id = xxx oder_by created_at desc
-        tweets = Tweet.objects.filter(
-            user_id=request.query_params['user_id']
-        ).order_by('-created_at')
+        # tweets = Tweet.objects.filter(
+        #     user_id=request.query_params['user_id']
+        # ).order_by('-created_at')
+        tweets = TweetService.get_cached_tweets(user_id=request.query_params['user_id'])
         tweets = self.paginate_queryset(tweets)
         #normally, the type of JSON Response is hash
         #can not use list
