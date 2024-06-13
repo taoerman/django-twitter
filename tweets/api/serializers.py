@@ -7,6 +7,7 @@ from likes.api.serializers import LikeSerializer
 from rest_framework.exceptions import ValidationError
 from tweets.constants import TWEET_PHOTOS_UPLOAD_LIMIT
 from tweets.services import TweetService
+from utils.redis_helper import RedisHelper
 
 class TweetSerializer(serializers.ModelSerializer):
     user = UserSerializerForTweet(source='cached_user')
@@ -32,10 +33,10 @@ class TweetSerializer(serializers.ModelSerializer):
         return LikeService.has_liked(self.context['request'].user, obj)
 
     def get_likes_count(self, obj):
-        return obj.like_set.count()
+        return RedisHelper.get_count(obj, 'likes_count')
 
     def get_comments_count(self, obj):
-        return obj.comment_set.count()
+        return RedisHelper.get_count(obj, 'comments_count')
 
     def get_photo_urls(self, obj):
         photo_urls = []
