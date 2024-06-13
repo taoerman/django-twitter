@@ -202,3 +202,4 @@ try:
     from .local_settings import *
 except:
     pass
+SESSION_COOKIE_SECURE = True
