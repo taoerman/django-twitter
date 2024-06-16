@@ -83,7 +83,7 @@ class TweetViewSet(viewsets.GenericViewSet):
             }, status=400)
         #save will call create method in TweetSerializerForCreate
         tweet = serializer.save()
-        NewsFeedService.fanout_to_follower(tweet)
+        NewsFeedService.fanout_to_followers(tweet)
         return Response(
             TweetSerializer(tweet, context={'request' : request}).data,
             status=201
