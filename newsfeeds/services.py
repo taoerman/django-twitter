@@ -1,28 +1,12 @@
-from friendships.services import FriendshipService
 from newsfeeds.models import NewsFeed
 from twitter.cache import USER_NEWSFEEDS_PATTERN
 from utils.redis_helper import RedisHelper
+from newsfeeds.tasks import fanout_newsfeeds_tasks
 class NewsFeedService(object):
 
     @classmethod
-    def fanout_to_follower(cls, tweet):
-        # followers = FriendshipService.get_followers(tweet.user)
-        # we can not use forloop + query
-        # for follower in followers:
-        #     NewsFeed.objects.create(user=follower, tweet=tweet)
-
-        newsfeeds = [
-            # NewsFeed(user=follower, tweet=tweet)
-            # this clause does not call save()
-            # does not cause query
-            NewsFeed(user=follower, tweet=tweet)
-            for follower in FriendshipService.get_followers(tweet.user)
-        ]
-        newsfeeds.append(NewsFeed(user=tweet.user, tweet=tweet))
-        NewsFeed.objects.bulk_create(newsfeeds)
-
-        for newsfeed in newsfeeds:
-            cls.push_newsfeeds_to_cache(newsfeed)
+    def fanout_to_followers(cls, tweet):
+        result = fanout_newsfeeds_tasks.delay(tweet.id)
 
     @classmethod
     def get_cached_newsfeeds(cls, user_id):
