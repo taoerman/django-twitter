@@ -1,12 +1,12 @@
 from newsfeeds.models import NewsFeed
 from twitter.cache import USER_NEWSFEEDS_PATTERN
 from utils.redis_helper import RedisHelper
-from newsfeeds.tasks import fanout_newsfeeds_tasks
+from newsfeeds.tasks import fanout_newsfeeds_main_task
 class NewsFeedService(object):
 
     @classmethod
     def fanout_to_followers(cls, tweet):
-        result = fanout_newsfeeds_tasks.delay(tweet.id)
+        result = fanout_newsfeeds_main_task.delay(tweet.id)
 
     @classmethod
     def get_cached_newsfeeds(cls, user_id):
